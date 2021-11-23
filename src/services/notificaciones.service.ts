@@ -11,14 +11,14 @@ export class NotificacionesService {
   EnviarNotificacionesPorSMS(): void {
     console.log("Hola");
     const accountSid = 'ACbbfc16f005fb4672595da45b8fca7d5e'; // Your Account SID from www.twilio.com/console
-    const authToken = 'bb12c42d9510483dd2b832eb18dd0818'; // Your Auth Token from www.twilio.com/console
+    const authToken = '951fed216d0a489ab934b14b3c280778'; // Your Auth Token from www.twilio.com/console
 
     const twilio = require('twilio');
     const client = new twilio(accountSid, authToken);
 
     client.messages
       .create({
-        body: 'Hello prueba twlio',
+        body: 'Hello Mostro, sigue asi Crar, constancia es la clave ',
         to: '+573183903019', // Text this number
         from: '+14787968580', // From a valid Twilio number
       })
