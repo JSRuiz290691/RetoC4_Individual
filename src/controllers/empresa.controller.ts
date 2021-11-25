@@ -1,34 +1,28 @@
-import { service } from '@loopback/core';
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
 import {Empresa} from '../models';
 import {EmpresaRepository} from '../repositories';
-import { NotificacionesService } from '../services';
+import {NotificacionesService} from '../services';
 
 export class EmpresaController {
   constructor(
     @repository(EmpresaRepository)
-    public empresaRepository : EmpresaRepository,
+    public empresaRepository: EmpresaRepository,
     @service(NotificacionesService)
-    public notificaciones : NotificacionesService
-  ) {}
+    public notificaciones: NotificacionesService
+  ) { }
 
   @post('/empresas')
   @response(200, {
@@ -48,7 +42,7 @@ export class EmpresaController {
     })
     empresa: Omit<Empresa, 'id'>,
   ): Promise<Empresa> {
-    this.notificaciones.EnviarNotificacionesPorSMS();
+
     return this.empresaRepository.create(empresa);
   }
 

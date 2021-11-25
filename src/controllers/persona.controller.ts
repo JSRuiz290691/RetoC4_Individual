@@ -1,34 +1,56 @@
-import { service } from '@loopback/core';
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, HttpErrors, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
-import {Persona} from '../models';
+import {Credenciales, Persona} from '../models';
 import {PersonaRepository} from '../repositories';
-import { NotificacionesService } from '../services';
+import {AutenticacionService, NotificacionesService} from '../services';
 
 export class PersonaController {
   constructor(
     @repository(PersonaRepository)
-    public personaRepository : PersonaRepository,
+    public personaRepository: PersonaRepository,
     @service(NotificacionesService)
-    public notificaciones : NotificacionesService
-  ) {}
+    public notificaciones: NotificacionesService,
+    @service(AutenticacionService)
+    public servicioAutenticacion: AutenticacionService
+  ) { }
+
+  @post("/identificarPersona", {
+    responses: {
+      '200': {
+        description: "Identificacion de usuario"
+      }
+    }
+  })
+  async identificarPersona(
+    @requestBody() credenciales: Credenciales
+  ) {
+    let p = await this.servicioAutenticacion.IdentificarPersona(credenciales.usuario, credenciales.clave); //con esta informacion el va a ir a identificar ese metodo IdentificarPersona
+    if (p) {// si los datos son correctos, trae inf de la persona
+      let token = this.servicioAutenticacion.GenerarTokenJWT(p);
+      return {
+        datos: {
+          nombre: p.nombres,
+          email: p.email,
+          id: p.id
+        },
+        tk: token
+      }
+    } else {
+      throw new HttpErrors[401]("Datos invalidos"); //throw es lanzar una nueva excepcion - 401 es aquel que se refiere a la no autorizacion de acceso a una accion por parte sde una peticion
+    }
+  }
 
   @post('/personas')
   @response(200, {
@@ -48,8 +70,16 @@ export class PersonaController {
     })
     persona: Omit<Persona, 'id'>,
   ): Promise<Persona> {
-    this.notificaciones.EnviarNotificacionesPorSMS();
-    return this.personaRepository.create(persona);
+
+    let clave = this.servicioAutenticacion.GenerarClave();
+    let claveCifrada = this.servicioAutenticacion.CifrarClave(clave)
+    persona.clave = claveCifrada;
+
+    //Notificar al usuario
+
+    this.notificaciones.EnviarNotificacionesPorSMS(persona.telefono, persona.nombres, persona.email, persona.clave);
+    let p = this.personaRepository.create(persona);
+    return p;
   }
 
   @get('/personas/count')
